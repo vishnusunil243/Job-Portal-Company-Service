@@ -1,6 +1,10 @@
 package entities
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Company struct {
 	ID       uuid.UUID
@@ -20,4 +24,25 @@ type Link struct {
 	ID    uuid.UUID
 	Title string
 	URL   string
+}
+type Job struct {
+	ID          uuid.UUID
+	Designation string
+	Capacity    int
+	Hired       int
+	StatusId    int
+	Status      Status `gorm:"foreignKey:StatusId"`
+	PostedOn    time.Time
+	ValidUntil  time.Time
+}
+type SalaryRange struct {
+	ID        uuid.UUID
+	JobID     uuid.UUID
+	Job       Job `gorm:"foreignKey:jobID"`
+	MinSalary int64
+	MaxSalary int64
+}
+type Status struct {
+	ID     int
+	Status string
 }

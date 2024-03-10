@@ -30,6 +30,10 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240309180904-84a99d7160fe h1:IVtd2mbDX4leesFHuuazRwc0VN2hf/sb/QgxLb+ys8M=
 github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240309180904-84a99d7160fe/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240310080459-5f971489d7c0 h1:zQukpEnN7VSLmzx3Qo3Hlwm1HBFHNlEOQqxfRb02qaQ=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240310080459-5f971489d7c0/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240310113042-e23f57797ab1 h1:+QkOsDjnjdALBnPx7VngCZoHUxtyiDM1r9Jw31bSTts=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240310113042-e23f57797ab1/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
 golang.org/x/crypto v0.18.0 h1:PGVlW0xEltQnzFZ55hkuX5+KLyrMYhHld1YHO4AKcdc=
 golang.org/x/crypto v0.18.0/go.mod h1:R0j02AL6hcrfOiy9T4ZYp/rcWeMxM3L6QYxlOuEG1mg=
 golang.org/x/net v0.20.0 h1:aCL9BSgETF1k+blQaYUBx9hJ9LOGP3gAVemcZlf1Kpo=

@@ -5,7 +5,7 @@ go 1.21.0
 require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240309180904-84a99d7160fe
+	github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240310113042-e23f57797ab1
 	golang.org/x/crypto v0.18.0
 	google.golang.org/grpc v1.62.1
 	gorm.io/driver/postgres v1.5.7

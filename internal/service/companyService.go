@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/entities"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/adapters"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/helper"
 	"github.com/vishnusunil243/Job-Portal-proto-files/pb"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type CompanyService struct {
@@ -61,5 +64,80 @@ func (company *CompanyService) CompanyLogin(ctx context.Context, req *pb.Company
 		Email: companyData.Email,
 		Name:  companyData.Name,
 		Phone: companyData.Phone,
+	}, nil
+}
+func (company *CompanyService) AddJob(ctx context.Context, req *pb.AddJobRequest) (*pb.JobResponse, error) {
+	validUntil, err := ptypes.Timestamp(req.ValidUntil)
+	if err != nil {
+		return nil, err
+	}
+	jobreqEntity := entities.Job{
+		Designation: req.Designation,
+		Capacity:    int(req.Vacancy),
+		Hired:       0,
+		ValidUntil:  validUntil,
+	}
+	salaryRangeEntity := entities.SalaryRange{
+		MinSalary: req.Salaryrange.MinSalary,
+		MaxSalary: req.Salaryrange.MaxSalary,
+	}
+	jobData, sRange, err := company.adapters.AddJob(jobreqEntity, salaryRangeEntity)
+	if err != nil {
+		return &pb.JobResponse{}, err
+	}
+	resSalaryRange := pb.SalaryRange{
+		MinSalary: sRange.MinSalary,
+		MaxSalary: sRange.MaxSalary,
+	}
+	return &pb.JobResponse{
+		Designation: jobData.Designation,
+		PostedOn:    timestamppb.New(jobData.PostedOn),
+		ValidUntil:  timestamppb.New(jobData.ValidUntil),
+		Vacancy:     int32(jobData.Capacity),
+		Hired:       int32(jobData.Hired),
+		Salaryrange: &resSalaryRange,
+	}, nil
+}
+func (company *CompanyService) GetAllJobs(e *emptypb.Empty, srv pb.CompanyService_GetAllJobsServer) error {
+	jobs, err := company.adapters.GetAllJobs()
+	if err != nil {
+		fmt.Println("error fetching jobs ", err.Error())
+		return err
+	}
+	for _, job := range jobs {
+		resSalaryRange := pb.SalaryRange{
+			MinSalary: job.MinSalary,
+			MaxSalary: job.MaxSalary,
+		}
+		res := &pb.JobResponse{
+			Designation: job.Designation,
+			Salaryrange: &resSalaryRange,
+			Vacancy:     int32(job.Capacity),
+			Hired:       int32(job.Hired),
+			PostedOn:    timestamppb.New(job.PostedOn),
+			ValidUntil:  timestamppb.New(job.ValidUntil),
+		}
+		if err := srv.Send(res); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (company *CompanyService) GetJob(ctx context.Context, req *pb.GetJobById) (*pb.JobResponse, error) {
+	job, err := company.adapters.GetJob(req.Id)
+	if err != nil {
+		return &pb.JobResponse{}, err
+	}
+	sRange := &pb.SalaryRange{
+		MinSalary: job.MinSalary,
+		MaxSalary: job.MaxSalary,
+	}
+	return &pb.JobResponse{
+		Designation: job.Designation,
+		Vacancy:     int32(job.Capacity),
+		Hired:       int32(job.Hired),
+		PostedOn:    timestamppb.New(job.PostedOn),
+		ValidUntil:  timestamppb.New(job.ValidUntil),
+		Salaryrange: sRange,
 	}, nil
 }
