@@ -1,6 +1,8 @@
 package adapters
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/entities"
 	helperstruct "github.com/vishnusunil243/Job-Portal-Company-Service/internal/helperStruct"
@@ -19,14 +21,14 @@ func NewCompanyAdapter(db *gorm.DB) *CompanyAdapter {
 func (company *CompanyAdapter) CompanySignup(req entities.Company) (entities.Company, error) {
 	id := uuid.New()
 	var res entities.Company
-	insertQuery := `INSERT INTO company (id,name,email,phone,password) VALUES ($1,$2,$3,$4,$5) RETURNING *`
-	if err := company.DB.Raw(insertQuery, id, req.Name, req.Email, req.Phone, req.Password).Scan(&res).Error; err != nil {
+	insertQuery := `INSERT INTO companies (id,name,email,phone,password,category_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`
+	if err := company.DB.Raw(insertQuery, id, req.Name, req.Email, req.Phone, req.Password, req.CategoryId).Scan(&res).Error; err != nil {
 		return entities.Company{}, err
 	}
 	return res, nil
 }
 func (company *CompanyAdapter) GetCompanyByEmail(email string) (entities.Company, error) {
-	selectQuery := `SELECT * FROM company WHERE email=?`
+	selectQuery := `SELECT * FROM companies WHERE email=?`
 	var res entities.Company
 	if err := company.DB.Raw(selectQuery, email).Scan(&res).Error; err != nil {
 		return entities.Company{}, err
@@ -37,8 +39,8 @@ func (company *CompanyAdapter) AddJob(jobreq entities.Job, salaryRange entities.
 	tx := company.DB.Begin()
 	jobId := uuid.New()
 	var jobData entities.Job
-	insertJobQuery := `INSERT INTO jobs (id,deisgnation,capacity,hired,status_id,posted_on,valid_until) VALUES ($1,$2,$3,$4,$5,NOW(),$6) RETURNING *`
-	if err := tx.Raw(insertJobQuery, jobId, jobreq.Designation, jobreq.Capacity, jobreq.Hired, 1, jobreq.ValidUntil).Scan(&jobData).Error; err != nil {
+	insertJobQuery := `INSERT INTO jobs (id,designation,capacity,hired,status_id,posted_on,valid_until,company_id,min_experience) VALUES ($1,$2,$3,$4,$5,NOW(),$6,$7,$8) RETURNING *`
+	if err := tx.Raw(insertJobQuery, jobId, jobreq.Designation, jobreq.Capacity, jobreq.Hired, 1, jobreq.ValidUntil, jobreq.CompanyID, jobreq.MinExperience).Scan(&jobData).Error; err != nil {
 		tx.Rollback()
 		return entities.Job{}, entities.SalaryRange{}, err
 	}
@@ -58,7 +60,7 @@ func (company *CompanyAdapter) AddJob(jobreq entities.Job, salaryRange entities.
 	return jobData, sRange, nil
 }
 func (company *CompanyAdapter) GetAllJobs() ([]helperstruct.JobHelper, error) {
-	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary FROM jobs j LEFT JOIN salary_ranges s`
+	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id`
 	var res []helperstruct.JobHelper
 	if err := company.DB.Raw(selectQuery).Scan(&res).Error; err != nil {
 		return []helperstruct.JobHelper{}, err
@@ -66,11 +68,153 @@ func (company *CompanyAdapter) GetAllJobs() ([]helperstruct.JobHelper, error) {
 	return res, nil
 }
 func (company *CompanyAdapter) GetJob(ID string) (helperstruct.JobHelper, error) {
-	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary FROM jobs j LEFT JOIN salary_ranges s WHERE id=?`
+	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary,posted_on,valid_until FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id WHERE j.id=?`
 	var res helperstruct.JobHelper
 	if err := company.DB.Raw(selectQuery, ID).Scan(&res).Error; err != nil {
 		return helperstruct.JobHelper{}, err
 	}
+	fmt.Println(res)
 	return res, nil
 
+}
+func (company *CompanyAdapter) GetAllJobForCompany(companyId string) ([]helperstruct.JobHelper, error) {
+	var res []helperstruct.JobHelper
+	selectQuery := `SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id WHERE company_id=?`
+	if err := company.DB.Raw(selectQuery, companyId).Scan(&res).Error; err != nil {
+		return []helperstruct.JobHelper{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) UpdateJob(ID string, req helperstruct.JobHelper) error {
+	updateJobs := `UPDATE jobs SET designation=$1,capacity=$2,hired=$3,status_id=$4,valid_until=$5 WHERE id=$6`
+	tx := company.DB.Begin()
+	if err := tx.Exec(updateJobs, req.Designation, req.Capacity, req.Hired, req.StatusID, req.ValidUntil, ID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	updateSalaryRange := `UPDATE salary_ranges SET min_salary=$1,max_salary=$2 WHERE job_id=$3`
+	if err := tx.Exec(updateSalaryRange, req.MinSalary, req.MaxSalary, ID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) DeleteJob(ID string) error {
+	deleteQuery := `DELETE FROM jobs where id=?`
+	if err := company.DB.Exec(deleteQuery, ID).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) AddJobSkill(req entities.JobSkill) error {
+	addJobSkillQuery := `INSERT INTO job_skills(id,skill_id,job_id) VALUES ($1,$2,$3)`
+	id := uuid.New()
+	if err := company.DB.Exec(addJobSkillQuery, id, req.SkillId, req.JobId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) DeleteJobSkill(id string) error {
+	updateJobSkillQuery := `DELETE FROM job_skills WHERE id=?`
+	if err := company.DB.Exec(updateJobSkillQuery, id).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) GetAllJobSkills(jobId string) ([]entities.JobSkill, error) {
+	getAllJobSkillQuery := `SELECT * FROM job_skills WHERE job_id=?`
+	var res []entities.JobSkill
+	if err := company.DB.Raw(getAllJobSkillQuery, jobId).Scan(&res).Error; err != nil {
+		return []entities.JobSkill{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) CreateProfile(req entities.Profile) error {
+	id := uuid.New()
+	insertProfileQuery := `INSERT INTO profiles (id,company_id) VALUES ($1,$2)`
+	if err := company.DB.Exec(insertProfileQuery, id, req.CompanyId).Error; err != nil {
+		return err
+	}
+	return nil
+
+}
+func (company *CompanyAdapter) AddLink(req entities.Link) error {
+	id := uuid.New()
+	insertLinkQuery := `INSERT INTO links (id,url,title,profile_id) VALUES ($1,$2,$3,$4)`
+	if err := company.DB.Exec(insertLinkQuery, id, req.URL, req.Title, req.ProfileId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) DeleteLink(id string) error {
+	deleteLinkQuery := `DELETE FROM links WHERE id=?`
+	if err := company.DB.Exec(deleteLinkQuery, id).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) GetAllLink(profileId string) ([]entities.Link, error) {
+	var res []entities.Link
+	selectLinks := `SELECT * FROM links WHERE profile_id=?`
+	if err := company.DB.Raw(selectLinks, profileId).Scan(&res).Error; err != nil {
+		return []entities.Link{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) GetProfileIdFromCompanyId(companyId string) (string, error) {
+	var res string
+	selectProfileQuery := `SELECT id FROM profiles WHERE company_id=?`
+	if err := company.DB.Raw(selectProfileQuery, companyId).Scan(&res).Error; err != nil {
+		return "", err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) GetCompanyById(companyId string) (entities.Company, error) {
+	selectCompanyQuery := `SELECT * FROM companies WHERE id=?`
+	var res entities.Company
+	if err := company.DB.Raw(selectCompanyQuery, companyId).Scan(&res).Error; err != nil {
+		return entities.Company{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) EditName(req entities.Company) error {
+	updateQuery := `UPDATE companies SET name=$1 WHERE id=$2`
+	if err := company.DB.Exec(updateQuery, req.Name, req.ID).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) EditPhone(req entities.Company) error {
+	updateQuery := `UPDATE companies SET phone=$1 WHERE id=$2`
+	if err := company.DB.Exec(updateQuery, req.Phone, req.ID).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) AddAddress(req entities.Address) error {
+	id := uuid.New()
+
+	insertQuery := `INSERT INTO addresses (id,country,state,district,city,profile_id) VALUES ($1,$2,$3,$4,$5,$6)`
+	if err := company.DB.Exec(insertQuery, id, req.Country, req.State, req.District, req.City, req.ProfileId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) EditAddress(req entities.Address) error {
+	updateQuery := `UPDATE addresses SET country=$1,state=$2,district=$3,city=$4 WHERE profile_id=$5`
+	if err := company.DB.Exec(updateQuery, req.Country, req.State, req.District, req.City, req.ProfileId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) GetAddress(profileId string) (entities.Address, error) {
+	selectQuery := `SELECT * FROM addresses WHERE profile_id=?`
+	var res entities.Address
+	if err := company.DB.Raw(selectQuery, profileId).Scan(&res).Error; err != nil {
+		return entities.Address{}, err
+	}
+	return res, nil
 }

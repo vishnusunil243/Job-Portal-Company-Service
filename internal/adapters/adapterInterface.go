@@ -11,4 +11,21 @@ type AdapterInterface interface {
 	AddJob(entities.Job, entities.SalaryRange) (entities.Job, entities.SalaryRange, error)
 	GetAllJobs() ([]helperstruct.JobHelper, error)
 	GetJob(ID string) (helperstruct.JobHelper, error)
+	GetAllJobForCompany(companyId string) ([]helperstruct.JobHelper, error)
+	UpdateJob(string, helperstruct.JobHelper) error
+	DeleteJob(ID string) error
+	AddJobSkill(entities.JobSkill) error
+	DeleteJobSkill(string) error
+	GetAllJobSkills(jobId string) ([]entities.JobSkill, error)
+	CreateProfile(entities.Profile) error
+	AddLink(entities.Link) error
+	DeleteLink(Id string) error
+	GetAllLink(profileId string) ([]entities.Link, error)
+	GetProfileIdFromCompanyId(companyId string) (string, error)
+	GetCompanyById(companyId string) (entities.Company, error)
+	AddAddress(entities.Address) error
+	EditAddress(entities.Address) error
+	GetAddress(profileId string) (entities.Address, error)
+	EditName(entities.Company) error
+	EditPhone(entities.Company) error
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/db"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/initializer"
+	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/service"
 	"github.com/vishnusunil243/Job-Portal-proto-files/pb"
 	"google.golang.org/grpc"
 )
@@ -21,6 +22,15 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+	userConn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
+	if err != nil {
+		log.Fatal("error while connecting to user service")
+	}
+	defer func() {
+		userConn.Close()
+	}()
+	userRes := pb.NewUserServiceClient(userConn)
+	service.UserClient = userRes
 	services := initializer.Initializer(DB)
 	server := grpc.NewServer()
 	pb.RegisterCompanyServiceServer(server, services)
