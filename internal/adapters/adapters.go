@@ -60,7 +60,7 @@ func (company *CompanyAdapter) AddJob(jobreq entities.Job, salaryRange entities.
 	return jobData, sRange, nil
 }
 func (company *CompanyAdapter) GetAllJobs() ([]helperstruct.JobHelper, error) {
-	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id`
+	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id`
 	var res []helperstruct.JobHelper
 	if err := company.DB.Raw(selectQuery).Scan(&res).Error; err != nil {
 		return []helperstruct.JobHelper{}, err
@@ -68,7 +68,7 @@ func (company *CompanyAdapter) GetAllJobs() ([]helperstruct.JobHelper, error) {
 	return res, nil
 }
 func (company *CompanyAdapter) GetJob(ID string) (helperstruct.JobHelper, error) {
-	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary,posted_on,valid_until FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id WHERE j.id=?`
+	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary,posted_on,valid_until,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id WHERE j.id=?`
 	var res helperstruct.JobHelper
 	if err := company.DB.Raw(selectQuery, ID).Scan(&res).Error; err != nil {
 		return helperstruct.JobHelper{}, err
@@ -79,16 +79,16 @@ func (company *CompanyAdapter) GetJob(ID string) (helperstruct.JobHelper, error)
 }
 func (company *CompanyAdapter) GetAllJobForCompany(companyId string) ([]helperstruct.JobHelper, error) {
 	var res []helperstruct.JobHelper
-	selectQuery := `SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id WHERE company_id=?`
+	selectQuery := `SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id WHERE company_id=?`
 	if err := company.DB.Raw(selectQuery, companyId).Scan(&res).Error; err != nil {
 		return []helperstruct.JobHelper{}, err
 	}
 	return res, nil
 }
 func (company *CompanyAdapter) UpdateJob(ID string, req helperstruct.JobHelper) error {
-	updateJobs := `UPDATE jobs SET designation=$1,capacity=$2,hired=$3,status_id=$4,valid_until=$5 WHERE id=$6`
+	updateJobs := `UPDATE jobs SET designation=$1,capacity=$2,hired=$3,status_id=$4,valid_until=$5,min_experience=$6 WHERE id=$7`
 	tx := company.DB.Begin()
-	if err := tx.Exec(updateJobs, req.Designation, req.Capacity, req.Hired, req.StatusID, req.ValidUntil, ID).Error; err != nil {
+	if err := tx.Exec(updateJobs, req.Designation, req.Capacity, req.Hired, req.StatusID, req.ValidUntil, req.MinExperience, ID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -217,4 +217,20 @@ func (company *CompanyAdapter) GetAddress(profileId string) (entities.Address, e
 		return entities.Address{}, err
 	}
 	return res, nil
+}
+func (company *CompanyAdapter) UploadImage(image, profileId string) (string, error) {
+	var res string
+	insertImageQuery := `UPDATE profiles SET image=$1 WHERE id=$2 RETURNING image`
+	if err := company.DB.Raw(insertImageQuery, image, profileId).Scan(&res).Error; err != nil {
+		return "", err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) GetProfilePic(profileId string) (string, error) {
+	selectQuery := `SELECT image FROM profiles WHERE id=?`
+	var image string
+	if err := company.DB.Raw(selectQuery, profileId).Scan(&image).Error; err != nil {
+		return "", nil
+	}
+	return image, nil
 }

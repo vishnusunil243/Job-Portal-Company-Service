@@ -10,6 +10,7 @@ import (
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/adapters"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/helper"
 	helperstruct "github.com/vishnusunil243/Job-Portal-Company-Service/internal/helperStruct"
+	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/usecases"
 	"github.com/vishnusunil243/Job-Portal-proto-files/pb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -20,12 +21,14 @@ var (
 
 type CompanyService struct {
 	adapters adapters.AdapterInterface
+	usecases usecases.Usecase
 	pb.UnimplementedCompanyServiceServer
 }
 
-func NewCompanyService(adapters adapters.AdapterInterface) *CompanyService {
+func NewCompanyService(adapters adapters.AdapterInterface, usecases usecases.Usecase) *CompanyService {
 	return &CompanyService{
 		adapters: adapters,
+		usecases: usecases,
 	}
 }
 func (company CompanyService) CompanySignup(ctx context.Context, req *pb.CompanySignupRequest) (*pb.CompanySignupResponse, error) {
@@ -95,7 +98,7 @@ func (company *CompanyService) AddJobs(ctx context.Context, req *pb.AddJobReques
 		MinSalary: req.Salaryrange.MinSalary,
 		MaxSalary: req.Salaryrange.MaxSalary,
 	}
-	jobData, sRange, err := company.adapters.AddJob(jobreqEntity, salaryRangeEntity)
+	job, sRange, err := company.adapters.AddJob(jobreqEntity, salaryRangeEntity)
 	if err != nil {
 		return &pb.JobResponse{}, err
 	}
@@ -104,12 +107,15 @@ func (company *CompanyService) AddJobs(ctx context.Context, req *pb.AddJobReques
 		MaxSalary: sRange.MaxSalary,
 	}
 	return &pb.JobResponse{
-		Designation: jobData.Designation,
-		PostedOn:    jobData.PostedOn.String(),
-		ValidUntil:  jobData.ValidUntil.String(),
-		Vacancy:     int32(jobData.Capacity),
-		Hired:       int32(jobData.Hired),
-		Salaryrange: &resSalaryRange,
+		Designation:   job.Designation,
+		Salaryrange:   &resSalaryRange,
+		Vacancy:       int32(job.Capacity),
+		Hired:         int32(job.Hired),
+		PostedOn:      job.PostedOn.String(),
+		ValidUntil:    job.ValidUntil.String(),
+		Minexperience: job.MinExperience,
+		Capacity:      int32(job.Capacity),
+		Id:            job.ID.String(),
 	}, nil
 }
 func (company *CompanyService) GetAllJobs(e *emptypb.Empty, srv pb.CompanyService_GetAllJobsServer) error {
@@ -124,12 +130,17 @@ func (company *CompanyService) GetAllJobs(e *emptypb.Empty, srv pb.CompanyServic
 			MaxSalary: job.MaxSalary,
 		}
 		res := &pb.JobResponse{
-			Designation: job.Designation,
-			Salaryrange: &resSalaryRange,
-			Vacancy:     int32(job.Capacity),
-			Hired:       int32(job.Hired),
-			PostedOn:    job.PostedOn.String(),
-			ValidUntil:  job.ValidUntil.String(),
+			Designation:   job.Designation,
+			Salaryrange:   &resSalaryRange,
+			Vacancy:       int32(job.Capacity) - int32(job.Hired),
+			Hired:         int32(job.Hired),
+			PostedOn:      job.PostedOn.String(),
+			ValidUntil:    job.ValidUntil.String(),
+			Company:       job.Company,
+			Minexperience: job.MinExperience,
+			Status:        job.Status,
+			Capacity:      int32(job.Capacity),
+			Id:            job.JobID.String(),
 		}
 		if err := srv.Send(res); err != nil {
 			return err
@@ -147,12 +158,17 @@ func (company *CompanyService) GetJob(ctx context.Context, req *pb.GetJobById) (
 		MaxSalary: job.MaxSalary,
 	}
 	return &pb.JobResponse{
-		Designation: job.Designation,
-		Vacancy:     int32(job.Capacity),
-		Hired:       int32(job.Hired),
-		PostedOn:    job.PostedOn.String(),
-		ValidUntil:  job.ValidUntil.String(),
-		Salaryrange: sRange,
+		Designation:   job.Designation,
+		Salaryrange:   sRange,
+		Vacancy:       int32(job.Capacity) - int32(job.Hired),
+		Hired:         int32(job.Hired),
+		PostedOn:      job.PostedOn.String(),
+		ValidUntil:    job.ValidUntil.String(),
+		Company:       job.Company,
+		Minexperience: job.MinExperience,
+		Status:        job.Status,
+		Capacity:      int32(job.Capacity),
+		Id:            job.JobID.String(),
 	}, nil
 }
 func (company *CompanyService) GetAllJobsForCompany(req *pb.GetJobByCompanyId, srv pb.CompanyService_GetAllJobsForCompanyServer) error {
@@ -166,12 +182,17 @@ func (company *CompanyService) GetAllJobsForCompany(req *pb.GetJobByCompanyId, s
 			MaxSalary: job.MaxSalary,
 		}
 		res := &pb.JobResponse{
-			Designation: job.Designation,
-			Salaryrange: &resSalaryRange,
-			Vacancy:     int32(job.Capacity),
-			Hired:       int32(job.Hired),
-			PostedOn:    job.PostedOn.String(),
-			ValidUntil:  job.ValidUntil.String(),
+			Designation:   job.Designation,
+			Salaryrange:   &resSalaryRange,
+			Vacancy:       int32(job.Capacity) - int32(job.Hired),
+			Hired:         int32(job.Hired),
+			PostedOn:      job.PostedOn.String(),
+			ValidUntil:    job.ValidUntil.String(),
+			Company:       job.Company,
+			Minexperience: job.MinExperience,
+			Status:        job.Status,
+			Capacity:      int32(job.Capacity),
+			Id:            job.JobID.String(),
 		}
 		if err := srv.Send(res); err != nil {
 			return err
@@ -190,13 +211,14 @@ func (company *CompanyService) UpdateJobs(ctx context.Context, req *pb.UpdateJob
 		}
 	}
 	reqEntity := helperstruct.JobHelper{
-		Designation: req.Designation,
-		Capacity:    int(req.Capacity),
-		Hired:       int(req.Hired),
-		StatusID:    int(req.StatusId),
-		MinSalary:   req.Salaryrange.MinSalary,
-		MaxSalary:   req.Salaryrange.MaxSalary,
-		ValidUntil:  validUntil,
+		Designation:   req.Designation,
+		Capacity:      int(req.Capacity),
+		Hired:         int(req.Hired),
+		StatusID:      int(req.StatusId),
+		MinSalary:     req.Salaryrange.MinSalary,
+		MaxSalary:     req.Salaryrange.MaxSalary,
+		ValidUntil:    validUntil,
+		MinExperience: req.MinExperience,
 	}
 	err := company.adapters.UpdateJob(req.JobId, reqEntity)
 	if err != nil {
@@ -406,12 +428,16 @@ func (company *CompanyService) CompanyGetAddress(ctx context.Context, req *pb.Ge
 	if err != nil {
 		return nil, err
 	}
+	addressId := ""
+	if address.ID != uuid.Nil {
+		addressId = address.ID.String()
+	}
 	res := &pb.CompanyAddressResponse{
 		Country:  address.Country,
 		State:    address.State,
 		District: address.District,
 		City:     address.City,
-		Id:       address.ID.String(),
+		Id:       addressId,
 	}
 	return res, nil
 }
@@ -442,4 +468,31 @@ func (company *CompanyService) CompanyEditPhone(ctx context.Context, req *pb.Com
 		return nil, err
 	}
 	return nil, nil
+}
+func (company *CompanyService) CompanyUploadProfileImage(ctx context.Context, req *pb.CompanyImageRequest) (*pb.CompanyImageResponse, error) {
+	profile, err := company.adapters.GetProfileIdFromCompanyId(req.CompanyId)
+	if err != nil {
+		return nil, err
+	}
+	url, err := company.usecases.UploadImage(req, profile)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CompanyImageResponse{
+		Url: url,
+	}, nil
+
+}
+func (company *CompanyService) GetProfilePic(ctx context.Context, req *pb.GetJobByCompanyId) (*pb.CompanyImageResponse, error) {
+	profile, err := company.adapters.GetProfileIdFromCompanyId(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	image, err := company.adapters.GetProfilePic(profile)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CompanyImageResponse{
+		Url: image,
+	}, nil
 }

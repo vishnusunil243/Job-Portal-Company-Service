@@ -28,4 +28,6 @@ type AdapterInterface interface {
 	GetAddress(profileId string) (entities.Address, error)
 	EditName(entities.Company) error
 	EditPhone(entities.Company) error
+	UploadImage(profileId, image string) (string, error)
+	GetProfilePic(string) (string, error)
 }
