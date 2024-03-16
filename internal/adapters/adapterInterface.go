@@ -30,4 +30,6 @@ type AdapterInterface interface {
 	EditPhone(entities.Company) error
 	UploadImage(profileId, image string) (string, error)
 	GetProfilePic(string) (string, error)
+	CompanyGetJobByDesignation(companyId, designation string) (entities.Job, error)
+	CompanyGetJobSkill(jobId string, skillId int) (entities.JobSkill, error)
 }

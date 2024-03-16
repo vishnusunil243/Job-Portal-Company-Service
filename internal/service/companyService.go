@@ -39,6 +39,13 @@ func (company CompanyService) CompanySignup(ctx context.Context, req *pb.Company
 	if err != nil {
 		return &pb.CompanySignupResponse{}, err
 	}
+	check, err := company.adapters.GetCompanyByEmail(req.Email)
+	if err != nil {
+		return nil, err
+	}
+	if check.Name != "" {
+		return nil, fmt.Errorf("a company is already registered with the given email id")
+	}
 	reqEntity := entities.Company{
 		Name:       req.Name,
 		Email:      req.Email,
@@ -85,6 +92,13 @@ func (company *CompanyService) AddJobs(ctx context.Context, req *pb.AddJobReques
 	companyID, err := uuid.Parse(req.CompanyId)
 	if err != nil {
 		return &pb.JobResponse{}, err
+	}
+	job, err := company.adapters.CompanyGetJobByDesignation(req.CompanyId, req.Designation)
+	if err != nil {
+		return nil, err
+	}
+	if job.Designation != "" {
+		return nil, fmt.Errorf("you have already added a job for the given designation please add a new designation or update the previous job post")
 	}
 	jobreqEntity := entities.Job{
 		Designation:   req.Designation,
@@ -245,6 +259,13 @@ func (company *CompanyService) CompanyAddJobSkill(ctx context.Context, req *pb.A
 	}
 	if skill.Category == "" {
 		return nil, fmt.Errorf("please enter a valid skill id")
+	}
+	jobSkill, err := company.adapters.CompanyGetJobSkill(req.JobId, int(req.SkillId))
+	if err != nil {
+		return nil, err
+	}
+	if jobSkill.SkillId != 0 {
+		return nil, fmt.Errorf("this skill is aleady added please add a new skill")
 	}
 	jobId, err := uuid.Parse(req.JobId)
 	if err != nil {

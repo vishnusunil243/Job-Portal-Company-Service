@@ -234,3 +234,20 @@ func (company *CompanyAdapter) GetProfilePic(profileId string) (string, error) {
 	}
 	return image, nil
 }
+func (company *CompanyAdapter) CompanyGetJobByDesignation(companyId, designation string) (entities.Job, error) {
+	selectQuery := `SELECT * FROM jobs WHERE company_id=$1 AND designation=$2`
+	var res entities.Job
+	if err := company.DB.Raw(selectQuery, companyId, designation).Scan(&res).Error; err != nil {
+		return entities.Job{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) CompanyGetJobSkill(jobId string, skillId int) (entities.JobSkill, error) {
+
+	var res entities.JobSkill
+	selectSkillQuery := `SELECT * FROM job_skills WHERE job_id=$1 AND skill_id=$2`
+	if err := company.DB.Raw(selectSkillQuery, jobId, skillId).Scan(&res).Error; err != nil {
+		return entities.JobSkill{}, err
+	}
+	return res, nil
+}
