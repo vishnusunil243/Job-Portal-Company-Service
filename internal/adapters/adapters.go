@@ -1,8 +1,6 @@
 package adapters
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/entities"
 	helperstruct "github.com/vishnusunil243/Job-Portal-Company-Service/internal/helperStruct"
@@ -73,7 +71,6 @@ func (company *CompanyAdapter) GetJob(ID string) (helperstruct.JobHelper, error)
 	if err := company.DB.Raw(selectQuery, ID).Scan(&res).Error; err != nil {
 		return helperstruct.JobHelper{}, err
 	}
-	fmt.Println(res)
 	return res, nil
 
 }
@@ -248,6 +245,27 @@ func (company *CompanyAdapter) CompanyGetJobSkill(jobId string, skillId int) (en
 	selectSkillQuery := `SELECT * FROM job_skills WHERE job_id=$1 AND skill_id=$2`
 	if err := company.DB.Raw(selectSkillQuery, jobId, skillId).Scan(&res).Error; err != nil {
 		return entities.JobSkill{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) JobSearch(designation, experience string) ([]helperstruct.JobHelper, error) {
+	selectJobQuery := `SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id WHERE designation ILIKE $1 ORDER BY posted_on DESC`
+	var res []helperstruct.JobHelper
+	if err := company.DB.Raw(selectJobQuery, "%"+designation+"%").Scan(&res).Error; err != nil {
+		return []helperstruct.JobHelper{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) GetHomeUsers(designation string) ([]helperstruct.JobHelper, error) {
+	selectJobQuery := `WITH senior_jobs AS (
+	SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id WHERE designation ILIKE $1 ORDER BY posted_on DESC
+	)
+	SELECT * FROM senior_jobs
+	UNION ALL
+	SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id WHERE designation NOT ILIKE $1`
+	var res []helperstruct.JobHelper
+	if err := company.DB.Raw(selectJobQuery, "%"+designation+"%").Scan(&res).Error; err != nil {
+		return []helperstruct.JobHelper{}, err
 	}
 	return res, nil
 }

@@ -32,4 +32,6 @@ type AdapterInterface interface {
 	GetProfilePic(string) (string, error)
 	CompanyGetJobByDesignation(companyId, designation string) (entities.Job, error)
 	CompanyGetJobSkill(jobId string, skillId int) (entities.JobSkill, error)
+	JobSearch(designation, experience string) ([]helperstruct.JobHelper, error)
+	GetHomeUsers(designation string) ([]helperstruct.JobHelper, error)
 }

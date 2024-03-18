@@ -65,6 +65,16 @@ github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240315075454-1968a0634
 github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240315075454-1968a0634ca0/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
 github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240315102111-86c5791a3e91 h1:1i1sFR9+B5D1A3EeQk+9RYlZhwuSxlkDHj8K3se6Fms=
 github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240315102111-86c5791a3e91/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318054732-bdd19b6316d8 h1:4ZvV1jccyu2nkhwMcgX3tlO/ALgOBLGB+D1//AD0Cf4=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318054732-bdd19b6316d8/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318062247-1dcf695c7785 h1:PiHeggSEmp3L1DxXkzPJWvlz4XW+Jl7TpqAWPzZIN28=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318062247-1dcf695c7785/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318084909-1bd3f1fb8690 h1:bMPbLNtNmwQhjWXBHQG2aJ4Pa/dDQMBNOP9D/ARrbWs=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318084909-1bd3f1fb8690/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318091015-e2e7ccdb8a4e h1:9p18avG/+P6z21C8jdNf9ag1B6GuPJIFXBIOb3Zrx1k=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318091015-e2e7ccdb8a4e/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318131458-34955f820bda h1:6VGaGAseTXMxwrVNHJxRVIbPCmhzy9Vjo6H4tO3lcAk=
+github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318131458-34955f820bda/go.mod h1:HrgijLpWtziSIZNoLPNoNu+2HOxMfiGEvG32elFR5mE=
 golang.org/x/crypto v0.19.0 h1:ENy+Az/9Y1vSrlrvBSyna3PITt4tiZLf7sgCjZBX7Wo=
 golang.org/x/crypto v0.19.0/go.mod h1:Iy9bg/ha4yyC70EfRS8jz+B6ybOBKMaSxLj6P6oBDfU=
 golang.org/x/net v0.21.0 h1:AQyQV4dYCvJ7vGmJyKki9+PBdyvhkSd8EIx/qb0AYv4=

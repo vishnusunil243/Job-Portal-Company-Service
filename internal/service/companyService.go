@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	UserClient pb.UserServiceClient
+	UserClient   pb.UserServiceClient
+	SearchClient pb.SearchServiceClient
 )
 
 type CompanyService struct {
@@ -516,4 +517,77 @@ func (company *CompanyService) GetProfilePic(ctx context.Context, req *pb.GetJob
 	return &pb.CompanyImageResponse{
 		Url: image,
 	}, nil
+}
+func (company *CompanyService) JobSearch(req *pb.JobSearchRequest, srv pb.CompanyService_JobSearchServer) error {
+	jobs, err := company.adapters.JobSearch(req.Designation, "")
+	if err != nil {
+		return err
+	}
+	for _, job := range jobs {
+		salary := pb.SalaryRange{
+			MinSalary: job.MinSalary,
+			MaxSalary: job.MaxSalary,
+		}
+		res := &pb.JobResponse{
+			Id:            job.JobID.String(),
+			Company:       job.Company,
+			Designation:   job.Designation,
+			Salaryrange:   &salary,
+			Vacancy:       int32(job.Capacity) - int32(job.Hired),
+			Hired:         int32(job.Hired),
+			Capacity:      int32(job.Capacity),
+			PostedOn:      job.PostedOn.String(),
+			ValidUntil:    job.ValidUntil.String(),
+			Status:        job.Status,
+			Minexperience: job.MinExperience,
+		}
+		if err := srv.Send(res); err != nil {
+			return err
+		}
+	}
+
+	_, err = SearchClient.AddSearchHistory(context.Background(), &pb.SearchRequest{
+		UserId:  req.UserId,
+		Keyword: req.Designation,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (company *CompanyService) GetHome(req *pb.GetHomeRequest, srv pb.CompanyService_GetHomeServer) error {
+	searchHistory, err := SearchClient.GetSearchHistory(context.Background(), &pb.UserId{
+		UserId: req.UserId,
+	})
+	if err != nil {
+		return err
+	}
+	jobs, err := company.adapters.GetHomeUsers(searchHistory.Designation)
+	if err != nil {
+		return err
+	}
+	for _, job := range jobs {
+		sRange := &pb.SalaryRange{
+			MinSalary: job.MinSalary,
+			MaxSalary: job.MaxSalary,
+		}
+		res := &pb.JobResponse{
+			Id:            job.JobID.String(),
+			Company:       job.Company,
+			Designation:   job.Designation,
+			Salaryrange:   sRange,
+			Vacancy:       int32(job.Capacity) - int32(job.Hired),
+			Hired:         int32(job.Hired),
+			Capacity:      int32(job.Capacity),
+			PostedOn:      job.PostedOn.String(),
+			ValidUntil:    job.ValidUntil.String(),
+			Status:        job.Status,
+			Minexperience: job.MinExperience,
+		}
+		if err := srv.Send(res); err != nil {
+			return err
+		}
+	}
+	return nil
 }
