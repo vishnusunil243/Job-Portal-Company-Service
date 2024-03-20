@@ -269,3 +269,42 @@ func (company *CompanyAdapter) GetHomeUsers(designation string) ([]helperstruct.
 	}
 	return res, nil
 }
+func (company *CompanyAdapter) NotifyMe(userId, companyId string) error {
+	id := uuid.New()
+	insertIntoNotifyMeQuery := `INSERT INTO notify_mes (id,company_id,user_id) VALUES ($1,$2,$3)`
+	if err := company.DB.Exec(insertIntoNotifyMeQuery, id, companyId, userId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) GetNotifyMeByCompanyId(companyId string) ([]helperstruct.NotifyHelper, error) {
+	selectQuery := `SELECT n.user_id,n.company_id,c.name AS company FROM notify_mes n JOIN companies c ON n.company_id=c.id  WHERE n.company_id=?`
+	var res []helperstruct.NotifyHelper
+	if err := company.DB.Raw(selectQuery, companyId).Scan(&res).Error; err != nil {
+		return []helperstruct.NotifyHelper{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) GetAllNotifyMe(userId string) ([]helperstruct.NotifyHelper, error) {
+	selectQuery := `SELECT n.user_id,n.company_id,c.name AS company FROM notify_mes n JOIN companies c ON n.company_id=c.id WHERE n.user_id=?`
+	var res []helperstruct.NotifyHelper
+	if err := company.DB.Raw(selectQuery, userId).Scan(&res).Error; err != nil {
+		return []helperstruct.NotifyHelper{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) RemoveNotifyMe(userId, companyId string) error {
+	deleteQuery := `DELETE FROM notify_mes WHERE user_id=$1 AND company_id=$2`
+	if err := company.DB.Exec(deleteQuery, userId, companyId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) GetNotifyMe(companyId, userId string) (entities.NotifyMe, error) {
+	var res entities.NotifyMe
+	selectQuery := `SELECT * FROM notify_mes WHERE company_id=$1 AND user_id=$2`
+	if err := company.DB.Raw(selectQuery, companyId, userId).Scan(&res).Error; err != nil {
+		return entities.NotifyMe{}, err
+	}
+	return res, nil
+}

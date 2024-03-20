@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,8 +17,9 @@ import (
 )
 
 var (
-	UserClient   pb.UserServiceClient
-	SearchClient pb.SearchServiceClient
+	UserClient         pb.UserServiceClient
+	SearchClient       pb.SearchServiceClient
+	NotificationClient pb.EmailServiceClient
 )
 
 type CompanyService struct {
@@ -98,6 +100,24 @@ func (company *CompanyService) AddJobs(ctx context.Context, req *pb.AddJobReques
 	if err != nil {
 		return nil, err
 	}
+	notifyme, err := company.adapters.GetNotifyMeByCompanyId(req.CompanyId)
+	if err != nil {
+		return nil, err
+	}
+	go func(notifyme []helperstruct.NotifyHelper) {
+		for _, ntify := range notifyme {
+			rq := &pb.AddNotificationRequest{
+				UserId:  ntify.UserId.String(),
+				Message: fmt.Sprintf(`{"message":"%s has posted a new job opening , check it out "}`, ntify.Company),
+			}
+			_, err := NotificationClient.AddNotification(context.Background(), rq)
+			if err != nil {
+				log.Printf("notification not sent err:%v", err)
+			} else {
+				log.Printf("notification sent to %s", ntify.UserId)
+			}
+		}
+	}(notifyme)
 	if job.Designation != "" {
 		return nil, fmt.Errorf("you have already added a job for the given designation please add a new designation or update the previous job post")
 	}
@@ -590,4 +610,38 @@ func (company *CompanyService) GetHome(req *pb.GetHomeRequest, srv pb.CompanySer
 		}
 	}
 	return nil
+}
+func (company *CompanyService) NotifyMe(ctx context.Context, req *pb.NotifyMeRequest) (*emptypb.Empty, error) {
+	check, err := company.adapters.GetNotifyMe(req.CompanyId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	if check.CompanyId != uuid.Nil {
+		return nil, fmt.Errorf("notifications are already enabled")
+	}
+	if err := company.adapters.NotifyMe(req.UserId, req.CompanyId); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+func (company *CompanyService) GetAllNotifyMe(req *pb.GetHomeRequest, srv pb.CompanyService_GetAllNotifyMeServer) error {
+	companies, err := company.adapters.GetAllNotifyMe(req.UserId)
+	if err != nil {
+		return err
+	}
+	for _, company := range companies {
+		res := &pb.NotifyMeResponse{
+			Company: company.Company,
+		}
+		if err := srv.Send(res); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (company *CompanyService) CancelNotify(ctx context.Context, req *pb.NotifyMeRequest) (*emptypb.Empty, error) {
+	if err := company.adapters.RemoveNotifyMe(req.UserId, req.CompanyId); err != nil {
+		return nil, err
+	}
+	return nil, nil
 }

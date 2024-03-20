@@ -1,6 +1,7 @@
 package initializer
 
 import (
+	"github.com/vishnusunil243/Job-Portal-Company-Service/concurrency"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/adapters"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/service"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/usecases"
@@ -11,5 +12,7 @@ func Initializer(db *gorm.DB) *service.CompanyService {
 	adapter := adapters.NewCompanyAdapter(db)
 	usecases := usecases.NewCompanyUseCase(adapter)
 	service := service.NewCompanyService(adapter, usecases)
+	c := concurrency.NewConcurrency(db)
+	c.Concurrency()
 	return service
 }

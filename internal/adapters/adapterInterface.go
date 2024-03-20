@@ -34,4 +34,9 @@ type AdapterInterface interface {
 	CompanyGetJobSkill(jobId string, skillId int) (entities.JobSkill, error)
 	JobSearch(designation, experience string) ([]helperstruct.JobHelper, error)
 	GetHomeUsers(designation string) ([]helperstruct.JobHelper, error)
+	NotifyMe(userId, companyId string) error
+	GetNotifyMeByCompanyId(companyId string) ([]helperstruct.NotifyHelper, error)
+	GetAllNotifyMe(userId string) ([]helperstruct.NotifyHelper, error)
+	RemoveNotifyMe(userId, companyId string) error
+	GetNotifyMe(companyId, userId string) (entities.NotifyMe, error)
 }

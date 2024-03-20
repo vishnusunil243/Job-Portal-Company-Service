@@ -24,6 +24,7 @@ func main() {
 	}
 	userConn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
 	searchConn, err := grpc.Dial("localhost:8083", grpc.WithInsecure())
+	emailConn, err := grpc.Dial("localhost:8087", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("error while connecting to user service")
 	}
@@ -33,8 +34,10 @@ func main() {
 	}()
 	userRes := pb.NewUserServiceClient(userConn)
 	searchRes := pb.NewSearchServiceClient(searchConn)
+	emailRes := pb.NewEmailServiceClient(emailConn)
 	service.UserClient = userRes
 	service.SearchClient = searchRes
+	service.NotificationClient = emailRes
 	services := initializer.Initializer(DB)
 	server := grpc.NewServer()
 	pb.RegisterCompanyServiceServer(server, services)

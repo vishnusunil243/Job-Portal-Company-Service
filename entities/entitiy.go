@@ -67,3 +67,9 @@ type Profile struct {
 	Company   Company `gorm:"foreignKey:CompanyId"`
 	Image     string
 }
+type NotifyMe struct {
+	ID        uuid.UUID
+	CompanyId uuid.UUID
+	Company   Company `gorm:"foreignKey:CompanyId"`
+	UserId    uuid.UUID
+}

@@ -20,3 +20,9 @@ type JobHelper struct {
 	PostedOn      time.Time
 	ValidUntil    time.Time
 }
+type NotifyHelper struct {
+	UserId    uuid.UUID
+	CompanyId uuid.UUID
+	UserEmail string
+	Company   string
+}

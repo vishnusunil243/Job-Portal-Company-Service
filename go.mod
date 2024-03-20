@@ -7,7 +7,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/minio/minio-go/v7 v7.0.69
-	github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240318131458-34955f820bda
+	github.com/vishnusunil243/Job-Portal-proto-files v0.0.0-20240319180400-5cf247b6c73a
 	golang.org/x/crypto v0.19.0
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
