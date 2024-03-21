@@ -73,6 +73,9 @@ func (company *CompanyService) CompanyLogin(ctx context.Context, req *pb.Company
 	if err != nil {
 		return &pb.CompanySignupResponse{}, err
 	}
+	if companyData.IsBlocked {
+		return &pb.CompanySignupResponse{}, fmt.Errorf("unfortunately you have been blocked by the admin")
+	}
 	if companyData.Email == "" {
 		return &pb.CompanySignupResponse{}, fmt.Errorf("invalid credentials")
 	}
@@ -641,6 +644,121 @@ func (company *CompanyService) GetAllNotifyMe(req *pb.GetHomeRequest, srv pb.Com
 }
 func (company *CompanyService) CancelNotify(ctx context.Context, req *pb.NotifyMeRequest) (*emptypb.Empty, error) {
 	if err := company.adapters.RemoveNotifyMe(req.UserId, req.CompanyId); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+func (company *CompanyService) UpdateAverageRatingOfCompany(ctx context.Context, req *pb.UpdateRatingRequest) (*emptypb.Empty, error) {
+	if err := company.adapters.UpdateAverageRating(float64(req.AvgRating), req.CompanyId); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+func (company *CompanyService) GetAllCompany(e *emptypb.Empty, srv pb.CompanyService_GetAllCompanyServer) error {
+	companies, err := company.adapters.GetAllCompanies()
+	if err != nil {
+		return err
+	}
+
+	for _, company := range companies {
+		category, err := UserClient.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
+			Id: int32(company.CategoryId),
+		})
+		if err != nil {
+			return err
+		}
+		res := &pb.CompanyResponse{
+			Id:        company.ID.String(),
+			Name:      company.Name,
+			Email:     company.Email,
+			AvgRating: float32(company.AvgRating),
+			Phone:     company.Phone,
+			Category:  category.Category,
+		}
+		if err := srv.Send(res); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (company *CompanyService) GetCompany(ctx context.Context, req *pb.GetJobByCompanyId) (*pb.GetCompanyResponse, error) {
+	companyData, err := company.adapters.GetCompanyById(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	category, err := UserClient.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
+		Id: int32(companyData.CategoryId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	profileId, err := company.adapters.GetProfileIdFromCompanyId(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	address, err := company.adapters.GetAddress(profileId)
+	if err != nil {
+		return nil, err
+	}
+	addressRes := &pb.CompanyAddressResponse{
+		Id:       address.ID.String(),
+		Country:  address.Country,
+		State:    address.State,
+		District: address.District,
+		City:     address.City,
+	}
+	links, err := company.adapters.GetAllLink(profileId)
+	if err != nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	linkRes := []*pb.CompanyLinkResponse{}
+	for _, link := range links {
+		linkR := &pb.CompanyLinkResponse{
+			Id:    link.ID.String(),
+			Title: link.Title,
+			Url:   link.URL,
+		}
+		linkRes = append(linkRes, linkR)
+	}
+	jobRes := []*pb.JobResponse{}
+	jobs, err := company.adapters.GetAllJobForCompany(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	for _, job := range jobs {
+		jobR := &pb.JobResponse{
+			Id:          job.JobID.String(),
+			Designation: job.Designation,
+			Hired:       int32(job.Hired),
+			Vacancy:     int32(job.Capacity) - int32(job.Hired),
+			ValidUntil:  job.ValidUntil.String(),
+		}
+		jobRes = append(jobRes, jobR)
+	}
+	res := &pb.GetCompanyResponse{
+		Id:        companyData.ID.String(),
+		Name:      companyData.Name,
+		Phone:     companyData.Phone,
+		Email:     companyData.Email,
+		AvgRating: float32(companyData.AvgRating),
+		Category:  category.Category,
+		Address:   addressRes,
+		Links:     linkRes,
+		Jobs:      jobRes,
+	}
+	return res, nil
+}
+func (company *CompanyService) BlockCompany(ctx context.Context, req *pb.GetJobByCompanyId) (*emptypb.Empty, error) {
+	if err := company.adapters.BlockCompany(req.Id); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+func (company *CompanyService) UnblockCompany(ctx context.Context, req *pb.GetJobByCompanyId) (*emptypb.Empty, error) {
+	if err := company.adapters.UnblockCompany(req.Id); err != nil {
 		return nil, err
 	}
 	return nil, nil

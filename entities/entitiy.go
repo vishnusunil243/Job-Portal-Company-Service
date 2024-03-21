@@ -12,8 +12,9 @@ type Company struct {
 	Email      string
 	Phone      string
 	CategoryId int
-
-	Password string
+	Password   string
+	AvgRating  float64
+	IsBlocked  bool
 }
 
 type Address struct {

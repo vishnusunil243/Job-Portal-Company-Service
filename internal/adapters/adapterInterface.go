@@ -39,4 +39,8 @@ type AdapterInterface interface {
 	GetAllNotifyMe(userId string) ([]helperstruct.NotifyHelper, error)
 	RemoveNotifyMe(userId, companyId string) error
 	GetNotifyMe(companyId, userId string) (entities.NotifyMe, error)
+	UpdateAverageRating(rating float64, companyId string) error
+	GetAllCompanies() ([]entities.Company, error)
+	BlockCompany(companyId string) error
+	UnblockCompany(companyID string) error
 }

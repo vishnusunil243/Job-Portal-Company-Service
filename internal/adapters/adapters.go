@@ -19,7 +19,7 @@ func NewCompanyAdapter(db *gorm.DB) *CompanyAdapter {
 func (company *CompanyAdapter) CompanySignup(req entities.Company) (entities.Company, error) {
 	id := uuid.New()
 	var res entities.Company
-	insertQuery := `INSERT INTO companies (id,name,email,phone,password,category_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`
+	insertQuery := `INSERT INTO companies (id,name,email,phone,password,category_id,avg_rating) VALUES ($1,$2,$3,$4,$5,$6,0) RETURNING *`
 	if err := company.DB.Raw(insertQuery, id, req.Name, req.Email, req.Phone, req.Password, req.CategoryId).Scan(&res).Error; err != nil {
 		return entities.Company{}, err
 	}
@@ -307,4 +307,33 @@ func (company *CompanyAdapter) GetNotifyMe(companyId, userId string) (entities.N
 		return entities.NotifyMe{}, err
 	}
 	return res, nil
+}
+func (company *CompanyAdapter) UpdateAverageRating(rating float64, companyId string) error {
+	updateRatingQuery := `UPDATE companies SET avg_rating=$1 WHERE id=$2`
+	if err := company.DB.Exec(updateRatingQuery, rating, companyId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) GetAllCompanies() ([]entities.Company, error) {
+	selectQuery := `SELECT * FROM companies ORDER BY avg_rating DESC`
+	var res []entities.Company
+	if err := company.DB.Raw(selectQuery).Scan(&res).Error; err != nil {
+		return []entities.Company{}, err
+	}
+	return res, nil
+}
+func (company *CompanyAdapter) BlockCompany(companyId string) error {
+	updateQuery := `UPDATE companies SET is_blocked=true WHERE id=?`
+	if err := company.DB.Exec(updateQuery, companyId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (company *CompanyAdapter) UnblockCompany(companyID string) error {
+	updateQuery := `UPDATE companies SET is_blocked=false WHERE id=?`
+	if err := company.DB.Exec(updateQuery, companyID).Error; err != nil {
+		return err
+	}
+	return nil
 }
