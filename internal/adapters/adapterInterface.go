@@ -43,4 +43,5 @@ type AdapterInterface interface {
 	GetAllCompanies() ([]entities.Company, error)
 	BlockCompany(companyId string) error
 	UnblockCompany(companyID string) error
+	GetCompanyIdFromJobId(jobId string) (string, error)
 }

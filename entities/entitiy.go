@@ -15,6 +15,8 @@ type Company struct {
 	Password   string
 	AvgRating  float64
 	IsBlocked  bool
+	CreatedAt  time.Time
+	Subscribed bool
 }
 
 type Address struct {

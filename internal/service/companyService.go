@@ -89,6 +89,15 @@ func (company *CompanyService) CompanyLogin(ctx context.Context, req *pb.Company
 		Phone: companyData.Phone,
 	}, nil
 }
+func (company *CompanyService) GetCompanyIdFromJobId(ctx context.Context, req *pb.GetJobById) (*pb.GetJobByCompanyId, error) {
+	companyId, err := company.adapters.GetCompanyIdFromJobId(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetJobByCompanyId{
+		Id: companyId,
+	}, nil
+}
 func (company *CompanyService) AddJobs(ctx context.Context, req *pb.AddJobRequest) (*pb.JobResponse, error) {
 	layout := "2006-01-02T15:04:05.999999Z"
 	validUntil, err := time.Parse(layout, req.ValidUntil)

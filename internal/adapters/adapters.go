@@ -19,7 +19,7 @@ func NewCompanyAdapter(db *gorm.DB) *CompanyAdapter {
 func (company *CompanyAdapter) CompanySignup(req entities.Company) (entities.Company, error) {
 	id := uuid.New()
 	var res entities.Company
-	insertQuery := `INSERT INTO companies (id,name,email,phone,password,category_id,avg_rating) VALUES ($1,$2,$3,$4,$5,$6,0) RETURNING *`
+	insertQuery := `INSERT INTO companies (id,name,email,phone,password,category_id,avg_rating,created_at) VALUES ($1,$2,$3,$4,$5,$6,0,NOW()) RETURNING *`
 	if err := company.DB.Raw(insertQuery, id, req.Name, req.Email, req.Phone, req.Password, req.CategoryId).Scan(&res).Error; err != nil {
 		return entities.Company{}, err
 	}
@@ -214,6 +214,14 @@ func (company *CompanyAdapter) GetAddress(profileId string) (entities.Address, e
 		return entities.Address{}, err
 	}
 	return res, nil
+}
+func (company *CompanyAdapter) GetCompanyIdFromJobId(jobId string) (string, error) {
+	var companyId string
+	selectQuery := `SELECT company_id FROM jobs WHERE id=?`
+	if err := company.DB.Raw(selectQuery, jobId).Scan(&companyId).Error; err != nil {
+		return "", err
+	}
+	return companyId, nil
 }
 func (company *CompanyAdapter) UploadImage(image, profileId string) (string, error) {
 	var res string
