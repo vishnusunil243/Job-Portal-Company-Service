@@ -772,3 +772,9 @@ func (company *CompanyService) UnblockCompany(ctx context.Context, req *pb.GetJo
 	}
 	return nil, nil
 }
+func (company *CompanyService) UpdateHired(ctx context.Context, req *pb.GetJobById) (*emptypb.Empty, error) {
+	if err := company.adapters.UpdateHired(req.Id); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}

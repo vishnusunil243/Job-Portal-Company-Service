@@ -345,3 +345,10 @@ func (company *CompanyAdapter) UnblockCompany(companyID string) error {
 	}
 	return nil
 }
+func (company *CompanyAdapter) UpdateHired(jobId string) error {
+	updateQuery := `UPDATE jobs SET hired=hired+1 WHERE id=?`
+	if err := company.DB.Exec(updateQuery, jobId).Error; err != nil {
+		return err
+	}
+	return nil
+}

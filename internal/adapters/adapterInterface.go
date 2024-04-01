@@ -44,4 +44,5 @@ type AdapterInterface interface {
 	BlockCompany(companyId string) error
 	UnblockCompany(companyID string) error
 	GetCompanyIdFromJobId(jobId string) (string, error)
+	UpdateHired(jobId string) error
 }
