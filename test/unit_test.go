@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/entities"
 	mock_adapters "github.com/vishnusunil243/Job-Portal-Company-Service/internal/adapters/mockAdapters"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/helper"
@@ -169,6 +170,146 @@ func TestCompanyAddAddress(t *testing.T) {
 				if err != nil {
 					t.Errorf("expected no errors but found %v", err)
 				}
+			}
+		})
+	}
+}
+func TestNotifyMe(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	adapter := mock_adapters.NewMockAdapterInterface(ctrl)
+	usecase := mock_usecases.NewMockUsecase(ctrl)
+	companyservice := service.NewCompanyService(adapter, usecase)
+	testUUID := uuid.New()
+	tests := []struct {
+		name            string
+		request         *pb.NotifyMeRequest
+		mockGetNotifyMe func(string, string) (entities.NotifyMe, error)
+		wantError       bool
+	}{
+		{
+			name: "Fail",
+			request: &pb.NotifyMeRequest{
+				UserId:    testUUID.String(),
+				CompanyId: testUUID.String(),
+			},
+			mockGetNotifyMe: func(s1, s2 string) (entities.NotifyMe, error) {
+				return entities.NotifyMe{
+					ID:        testUUID,
+					CompanyId: testUUID,
+					UserId:    testUUID,
+				}, nil
+			},
+			wantError: true,
+		},
+		{
+			name: "Success",
+			request: &pb.NotifyMeRequest{
+				UserId:    testUUID.String(),
+				CompanyId: testUUID.String(),
+			},
+			mockGetNotifyMe: func(s1, s2 string) (entities.NotifyMe, error) {
+				return entities.NotifyMe{}, nil
+			},
+			wantError: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			adapter.EXPECT().GetNotifyMe(gomock.Any(), gomock.Any()).DoAndReturn(test.mockGetNotifyMe).AnyTimes().Times(1)
+			if !test.wantError {
+				adapter.EXPECT().NotifyMe(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			}
+			_, err := companyservice.NotifyMe(context.Background(), test.request)
+			if test.wantError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+func TestCompanySignup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	adapter := mock_adapters.NewMockAdapterInterface(ctrl)
+	usecase := mock_usecases.NewMockUsecase(ctrl)
+	companyservice := service.NewCompanyService(adapter, usecase)
+	tests := []struct {
+		name                  string
+		request               *pb.CompanySignupRequest
+		mockGetCompanyByEmail func(string) (entities.Company, error)
+		mockCompanySignup     func(entities.Company) (entities.Company, error)
+		wantError             bool
+		expectedResult        *pb.CompanySignupResponse
+	}{
+		{
+			name: "Success",
+			request: &pb.CompanySignupRequest{
+				Email:      "valid@gmail.com",
+				Name:       "valid",
+				Phone:      "8888888888",
+				CategoryId: 1,
+				Password:   "valid",
+			},
+			mockGetCompanyByEmail: func(s string) (entities.Company, error) {
+				return entities.Company{}, nil
+			},
+			mockCompanySignup: func(c entities.Company) (entities.Company, error) {
+				return entities.Company{
+					Email:      "valid@gmail.com",
+					Name:       "valid",
+					Phone:      "8888888888",
+					CategoryId: 1,
+					Password:   "valid",
+				}, nil
+			},
+			wantError: false,
+			expectedResult: &pb.CompanySignupResponse{
+				Email:      "valid@gmail.com",
+				Name:       "valid",
+				Phone:      "8888888888",
+				CategoryId: 1,
+			},
+		},
+		{
+			name: "Fail",
+			request: &pb.CompanySignupRequest{
+				Email:      "invalid@gmail.com",
+				Name:       "invalid",
+				Phone:      "8888888888",
+				CategoryId: 1,
+				Password:   "invalid",
+			},
+			mockGetCompanyByEmail: func(s string) (entities.Company, error) {
+				return entities.Company{
+					Name:       "invalid",
+					Email:      "invalid@gmail.com",
+					Phone:      "8888888888",
+					CategoryId: 1,
+				}, nil
+			},
+			mockCompanySignup: func(c entities.Company) (entities.Company, error) {
+				return entities.Company{}, nil
+			},
+			wantError:      true,
+			expectedResult: &pb.CompanySignupResponse{},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			adapter.EXPECT().GetCompanyByEmail(gomock.Any()).DoAndReturn(test.mockGetCompanyByEmail).AnyTimes().Times(1)
+			if !test.wantError {
+				adapter.EXPECT().CompanySignup(gomock.Any()).DoAndReturn(test.mockCompanySignup).AnyTimes().Times(1)
+			}
+			res, err := companyservice.CompanySignup(context.Background(), test.request)
+			if test.wantError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				res.Id = ""
+				assert.NotNil(t, res)
+				assert.Equal(t, test.expectedResult, res)
 			}
 		})
 	}
