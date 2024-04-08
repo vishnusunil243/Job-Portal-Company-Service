@@ -551,7 +551,7 @@ func (company *CompanyService) GetProfilePic(ctx context.Context, req *pb.GetJob
 	}, nil
 }
 func (company *CompanyService) JobSearch(req *pb.JobSearchRequest, srv pb.CompanyService_JobSearchServer) error {
-	jobs, err := company.adapters.JobSearch(req.Designation, "")
+	jobs, err := company.adapters.JobSearch(req.Designation, "", int(req.CategoryId))
 	if err != nil {
 		return err
 	}

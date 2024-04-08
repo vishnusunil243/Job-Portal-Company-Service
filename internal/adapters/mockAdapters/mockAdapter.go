@@ -9,7 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	entities "github.com/vishnusunil243/Job-Portal-Company-Service/entities"
-	helperStruct "github.com/vishnusunil243/Job-Portal-Company-Service/internal/helperStruct"
+	helperstruct "github.com/vishnusunil243/Job-Portal-Company-Service/internal/helperStruct"
 )
 
 // MockAdapterInterface is a mock of AdapterInterface interface.
@@ -281,10 +281,10 @@ func (mr *MockAdapterInterfaceMockRecorder) GetAllCompanies() *gomock.Call {
 }
 
 // GetAllJobForCompany mocks base method.
-func (m *MockAdapterInterface) GetAllJobForCompany(companyId string) ([]helperStruct.JobHelper, error) {
+func (m *MockAdapterInterface) GetAllJobForCompany(companyId string) ([]helperstruct.JobHelper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllJobForCompany", companyId)
-	ret0, _ := ret[0].([]helperStruct.JobHelper)
+	ret0, _ := ret[0].([]helperstruct.JobHelper)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -311,10 +311,10 @@ func (mr *MockAdapterInterfaceMockRecorder) GetAllJobSkills(jobId interface{}) *
 }
 
 // GetAllJobs mocks base method.
-func (m *MockAdapterInterface) GetAllJobs() ([]helperStruct.JobHelper, error) {
+func (m *MockAdapterInterface) GetAllJobs() ([]helperstruct.JobHelper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllJobs")
-	ret0, _ := ret[0].([]helperStruct.JobHelper)
+	ret0, _ := ret[0].([]helperstruct.JobHelper)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -341,10 +341,10 @@ func (mr *MockAdapterInterfaceMockRecorder) GetAllLink(profileId interface{}) *g
 }
 
 // GetAllNotifyMe mocks base method.
-func (m *MockAdapterInterface) GetAllNotifyMe(userId string) ([]helperStruct.NotifyHelper, error) {
+func (m *MockAdapterInterface) GetAllNotifyMe(userId string) ([]helperstruct.NotifyHelper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllNotifyMe", userId)
-	ret0, _ := ret[0].([]helperStruct.NotifyHelper)
+	ret0, _ := ret[0].([]helperstruct.NotifyHelper)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -401,10 +401,10 @@ func (mr *MockAdapterInterfaceMockRecorder) GetCompanyIdFromJobId(jobId interfac
 }
 
 // GetHomeUsers mocks base method.
-func (m *MockAdapterInterface) GetHomeUsers(designation string) ([]helperStruct.JobHelper, error) {
+func (m *MockAdapterInterface) GetHomeUsers(designation string) ([]helperstruct.JobHelper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHomeUsers", designation)
-	ret0, _ := ret[0].([]helperStruct.JobHelper)
+	ret0, _ := ret[0].([]helperstruct.JobHelper)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -416,10 +416,10 @@ func (mr *MockAdapterInterfaceMockRecorder) GetHomeUsers(designation interface{}
 }
 
 // GetJob mocks base method.
-func (m *MockAdapterInterface) GetJob(ID string) (helperStruct.JobHelper, error) {
+func (m *MockAdapterInterface) GetJob(ID string) (helperstruct.JobHelper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetJob", ID)
-	ret0, _ := ret[0].(helperStruct.JobHelper)
+	ret0, _ := ret[0].(helperstruct.JobHelper)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -446,10 +446,10 @@ func (mr *MockAdapterInterfaceMockRecorder) GetNotifyMe(companyId, userId interf
 }
 
 // GetNotifyMeByCompanyId mocks base method.
-func (m *MockAdapterInterface) GetNotifyMeByCompanyId(companyId string) ([]helperStruct.NotifyHelper, error) {
+func (m *MockAdapterInterface) GetNotifyMeByCompanyId(companyId string) ([]helperstruct.NotifyHelper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotifyMeByCompanyId", companyId)
-	ret0, _ := ret[0].([]helperStruct.NotifyHelper)
+	ret0, _ := ret[0].([]helperstruct.NotifyHelper)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -491,18 +491,18 @@ func (mr *MockAdapterInterfaceMockRecorder) GetProfilePic(arg0 interface{}) *gom
 }
 
 // JobSearch mocks base method.
-func (m *MockAdapterInterface) JobSearch(designation, experience string) ([]helperStruct.JobHelper, error) {
+func (m *MockAdapterInterface) JobSearch(designation, experience string, categoryId int) ([]helperstruct.JobHelper, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "JobSearch", designation, experience)
-	ret0, _ := ret[0].([]helperStruct.JobHelper)
+	ret := m.ctrl.Call(m, "JobSearch", designation, experience, categoryId)
+	ret0, _ := ret[0].([]helperstruct.JobHelper)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // JobSearch indicates an expected call of JobSearch.
-func (mr *MockAdapterInterfaceMockRecorder) JobSearch(designation, experience interface{}) *gomock.Call {
+func (mr *MockAdapterInterfaceMockRecorder) JobSearch(designation, experience, categoryId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JobSearch", reflect.TypeOf((*MockAdapterInterface)(nil).JobSearch), designation, experience)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JobSearch", reflect.TypeOf((*MockAdapterInterface)(nil).JobSearch), designation, experience, categoryId)
 }
 
 // NotifyMe mocks base method.
@@ -576,7 +576,7 @@ func (mr *MockAdapterInterfaceMockRecorder) UpdateHired(jobId interface{}) *gomo
 }
 
 // UpdateJob mocks base method.
-func (m *MockAdapterInterface) UpdateJob(arg0 string, arg1 helperStruct.JobHelper) error {
+func (m *MockAdapterInterface) UpdateJob(arg0 string, arg1 helperstruct.JobHelper) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateJob", arg0, arg1)
 	ret0, _ := ret[0].(error)

@@ -1,6 +1,8 @@
 package adapters
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/entities"
 	helperstruct "github.com/vishnusunil243/Job-Portal-Company-Service/internal/helperStruct"
@@ -256,8 +258,12 @@ func (company *CompanyAdapter) CompanyGetJobSkill(jobId string, skillId int) (en
 	}
 	return res, nil
 }
-func (company *CompanyAdapter) JobSearch(designation, experience string) ([]helperstruct.JobHelper, error) {
-	selectJobQuery := `SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id WHERE designation ILIKE $1 ORDER BY posted_on DESC`
+func (company *CompanyAdapter) JobSearch(designation, experience string, categoryId int) ([]helperstruct.JobHelper, error) {
+	selectJobQuery := `SELECT j.id AS job_id,max_salary,min_salary,designation,valid_until,posted_on,company_id,capacity,hired,status,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id WHERE designation ILIKE $1 `
+	if categoryId != 0 {
+		selectJobQuery = selectJobQuery + fmt.Sprintf("AND category_id=%d", categoryId)
+	}
+	selectJobQuery = selectJobQuery + "ORDER BY posted_on DESC"
 	var res []helperstruct.JobHelper
 	if err := company.DB.Raw(selectJobQuery, "%"+designation+"%").Scan(&res).Error; err != nil {
 		return []helperstruct.JobHelper{}, err
