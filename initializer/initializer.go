@@ -11,7 +11,7 @@ import (
 func Initializer(db *gorm.DB) *service.CompanyService {
 	adapter := adapters.NewCompanyAdapter(db)
 	usecases := usecases.NewCompanyUseCase(adapter)
-	service := service.NewCompanyService(adapter, usecases)
+	service := service.NewCompanyService(adapter, usecases, ":8087", ":8081", ":8083")
 	c := concurrency.NewConcurrency(db)
 	c.Concurrency()
 	return service

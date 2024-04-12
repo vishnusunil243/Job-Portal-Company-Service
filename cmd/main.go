@@ -8,7 +8,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/db"
 	"github.com/vishnusunil243/Job-Portal-Company-Service/initializer"
-	"github.com/vishnusunil243/Job-Portal-Company-Service/internal/service"
 	"github.com/vishnusunil243/Job-Portal-proto-files/pb"
 	"google.golang.org/grpc"
 )
@@ -22,22 +21,22 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	userConn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
-	searchConn, err := grpc.Dial("localhost:8083", grpc.WithInsecure())
-	emailConn, err := grpc.Dial("localhost:8087", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("error while connecting to user service")
-	}
-	defer func() {
-		userConn.Close()
-		searchConn.Close()
-	}()
-	userRes := pb.NewUserServiceClient(userConn)
-	searchRes := pb.NewSearchServiceClient(searchConn)
-	emailRes := pb.NewEmailServiceClient(emailConn)
-	service.UserClient = userRes
-	service.SearchClient = searchRes
-	service.NotificationClient = emailRes
+	// userConn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
+	// searchConn, err := grpc.Dial("localhost:8083", grpc.WithInsecure())
+	// emailConn, err := grpc.Dial("localhost:8087", grpc.WithInsecure())
+	// if err != nil {
+	// 	log.Fatal("error while connecting to user service")
+	// }
+	// defer func() {
+	// 	userConn.Close()
+	// 	searchConn.Close()
+	// }()
+	// userRes := pb.NewUserServiceClient(userConn)
+	// searchRes := pb.NewSearchServiceClient(searchConn)
+	// emailRes := pb.NewEmailServiceClient(emailConn)
+	// service.UserClient = userRes
+	// service.SearchClient = searchRes
+	// service.NotificationClient = emailRes
 	services := initializer.Initializer(DB)
 	server := grpc.NewServer()
 	pb.RegisterCompanyServiceServer(server, services)

@@ -16,22 +16,31 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-var (
+// var (
+// 	UserClient         pb.UserServiceClient
+// 	SearchClient       pb.SearchServiceClient
+// 	NotificationClient pb.EmailServiceClient
+// )
+
+type CompanyService struct {
 	UserClient         pb.UserServiceClient
 	SearchClient       pb.SearchServiceClient
 	NotificationClient pb.EmailServiceClient
-)
-
-type CompanyService struct {
-	adapters adapters.AdapterInterface
-	usecases usecases.Usecase
+	adapters           adapters.AdapterInterface
+	usecases           usecases.Usecase
 	pb.UnimplementedCompanyServiceServer
 }
 
-func NewCompanyService(adapters adapters.AdapterInterface, usecases usecases.Usecase) *CompanyService {
+func NewCompanyService(adapters adapters.AdapterInterface, usecases usecases.Usecase, notificationaddr, useraddr, searchaddr string) *CompanyService {
+	userConn, _ := helper.DialGrpc(useraddr)
+	notifyConn, _ := helper.DialGrpc(notificationaddr)
+	searchConn, _ := helper.DialGrpc(searchaddr)
 	return &CompanyService{
-		adapters: adapters,
-		usecases: usecases,
+		adapters:           adapters,
+		usecases:           usecases,
+		UserClient:         pb.NewUserServiceClient(userConn),
+		SearchClient:       pb.NewSearchServiceClient(searchConn),
+		NotificationClient: pb.NewEmailServiceClient(notifyConn),
 	}
 }
 func (company CompanyService) CompanySignup(ctx context.Context, req *pb.CompanySignupRequest) (*pb.CompanySignupResponse, error) {
@@ -122,7 +131,7 @@ func (company *CompanyService) AddJobs(ctx context.Context, req *pb.AddJobReques
 				UserId:  ntify.UserId.String(),
 				Message: fmt.Sprintf(`{"message":"%s has posted a new job opening , check it out "}`, ntify.Company),
 			}
-			_, err := NotificationClient.AddNotification(context.Background(), rq)
+			_, err := company.NotificationClient.AddNotification(context.Background(), rq)
 			if err != nil {
 				log.Printf("notification not sent err:%v", err)
 			} else {
@@ -284,7 +293,7 @@ func (company *CompanyService) DeleteJob(ctx context.Context, req *pb.GetJobById
 	return &emptypb.Empty{}, nil
 }
 func (company *CompanyService) CompanyAddJobSkill(ctx context.Context, req *pb.AddJobSkillRequest) (*emptypb.Empty, error) {
-	skill, err := UserClient.GetSkillById(context.Background(), &pb.GetSkillByIdRequest{
+	skill, err := company.UserClient.GetSkillById(context.Background(), &pb.GetSkillByIdRequest{
 		Id: req.SkillId,
 	})
 	if err != nil {
@@ -325,7 +334,7 @@ func (company *CompanyService) GetAllJobSkill(req *pb.GetJobById, srv pb.Company
 		return err
 	}
 	for _, jobSkill := range jobSkills {
-		skill, err := UserClient.GetSkillById(context.Background(), &pb.GetSkillByIdRequest{
+		skill, err := company.UserClient.GetSkillById(context.Background(), &pb.GetSkillByIdRequest{
 			Id: int32(jobSkill.SkillId),
 		})
 		if err != nil {
@@ -578,7 +587,7 @@ func (company *CompanyService) JobSearch(req *pb.JobSearchRequest, srv pb.Compan
 		}
 	}
 
-	_, err = SearchClient.AddSearchHistory(context.Background(), &pb.SearchRequest{
+	_, err = company.SearchClient.AddSearchHistory(context.Background(), &pb.SearchRequest{
 		UserId:  req.UserId,
 		Keyword: req.Designation,
 	})
@@ -589,7 +598,7 @@ func (company *CompanyService) JobSearch(req *pb.JobSearchRequest, srv pb.Compan
 	return nil
 }
 func (company *CompanyService) GetHome(req *pb.GetHomeRequest, srv pb.CompanyService_GetHomeServer) error {
-	searchHistory, err := SearchClient.GetSearchHistory(context.Background(), &pb.UserId{
+	searchHistory, err := company.SearchClient.GetSearchHistory(context.Background(), &pb.UserId{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -663,14 +672,14 @@ func (company *CompanyService) UpdateAverageRatingOfCompany(ctx context.Context,
 	}
 	return nil, nil
 }
-func (company *CompanyService) GetAllCompany(e *emptypb.Empty, srv pb.CompanyService_GetAllCompanyServer) error {
-	companies, err := company.adapters.GetAllCompanies()
+func (c *CompanyService) GetAllCompany(e *emptypb.Empty, srv pb.CompanyService_GetAllCompanyServer) error {
+	companies, err := c.adapters.GetAllCompanies()
 	if err != nil {
 		return err
 	}
 
 	for _, company := range companies {
-		category, err := UserClient.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
+		category, err := c.UserClient.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
 			Id: int32(company.CategoryId),
 		})
 		if err != nil {
@@ -695,7 +704,7 @@ func (company *CompanyService) GetCompany(ctx context.Context, req *pb.GetJobByC
 	if err != nil {
 		return nil, err
 	}
-	category, err := UserClient.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
+	category, err := company.UserClient.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
 		Id: int32(companyData.CategoryId),
 	})
 	if err != nil {

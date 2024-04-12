@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc"
 )
 
 func HashPassword(password string) (string, error) {
@@ -20,4 +21,8 @@ func CompareHashedPassword(hashedPass, password string) bool {
 		return false
 	}
 	return true
+}
+func DialGrpc(addr string) (*grpc.ClientConn, error) {
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	return conn, err
 }

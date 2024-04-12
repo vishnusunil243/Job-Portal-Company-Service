@@ -20,7 +20,7 @@ func TestCompanyLogin(t *testing.T) {
 	defer ctrl.Finish()
 	adapter := mock_adapters.NewMockAdapterInterface(ctrl)
 	usecase := mock_usecases.NewMockUsecase(ctrl)
-	companyService := service.NewCompanyService(adapter, usecase)
+	companyService := service.NewCompanyService(adapter, usecase, "", "", "")
 	requestPassword := "valid"
 	hashedPassword, _ := helper.HashPassword(requestPassword)
 	testUUID := uuid.New()
@@ -103,7 +103,7 @@ func TestCompanyAddAddress(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	adapter := mock_adapters.NewMockAdapterInterface(ctrl)
 	usecase := mock_usecases.NewMockUsecase(ctrl)
-	companyservice := service.NewCompanyService(adapter, usecase)
+	companyservice := service.NewCompanyService(adapter, usecase, "", "", "")
 	testUUid := uuid.New()
 	tests := []struct {
 		name                          string
@@ -179,7 +179,7 @@ func TestNotifyMe(t *testing.T) {
 	defer ctrl.Finish()
 	adapter := mock_adapters.NewMockAdapterInterface(ctrl)
 	usecase := mock_usecases.NewMockUsecase(ctrl)
-	companyservice := service.NewCompanyService(adapter, usecase)
+	companyservice := service.NewCompanyService(adapter, usecase, "", "", "")
 	testUUID := uuid.New()
 	tests := []struct {
 		name            string
@@ -234,7 +234,7 @@ func TestCompanySignup(t *testing.T) {
 	defer ctrl.Finish()
 	adapter := mock_adapters.NewMockAdapterInterface(ctrl)
 	usecase := mock_usecases.NewMockUsecase(ctrl)
-	companyservice := service.NewCompanyService(adapter, usecase)
+	companyservice := service.NewCompanyService(adapter, usecase, "", "", "")
 	tests := []struct {
 		name                  string
 		request               *pb.CompanySignupRequest
