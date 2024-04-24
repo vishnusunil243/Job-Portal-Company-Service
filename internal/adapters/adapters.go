@@ -60,7 +60,7 @@ func (company *CompanyAdapter) AddJob(jobreq entities.Job, salaryRange entities.
 	return jobData, sRange, nil
 }
 func (company *CompanyAdapter) GetAllJobs() ([]helperstruct.JobHelper, error) {
-	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,min_salary,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id`
+	selectQuery := `SELECT j.id AS job_id,designation,capacity,hired,status,max_salary,valid_until,posted_on,min_salary,c.name AS company,min_experience FROM jobs j LEFT JOIN salary_ranges s ON s.job_id=j.id LEFT JOIN statuses ON j.status_id=statuses.id LEFT JOIN companies c ON c.id=j.company_id`
 	var res []helperstruct.JobHelper
 	if err := company.DB.Raw(selectQuery).Scan(&res).Error; err != nil {
 		return []helperstruct.JobHelper{}, err
